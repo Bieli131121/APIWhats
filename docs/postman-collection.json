@@ -1,0 +1,260 @@
+{
+  "info": {
+    "name": "WhatsApp Business API",
+    "description": "Coleção completa de endpoints — Meta Cloud API oficial",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000/api/v1" },
+    { "key": "token", "value": "" },
+    { "key": "phone_test", "value": "+5511999990000" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var resp = pm.response.json();",
+            "if (resp.token) pm.collectionVariables.set('token', resp.token);"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@seudominio.com\",\n  \"password\": \"TroqueEsta@Senha123\"\n}" }
+          }
+        },
+        {
+          "name": "Criar usuário (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/auth/users",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Operador 1\",\n  \"email\": \"operador@empresa.com\",\n  \"password\": \"Senha@Segura123\",\n  \"role\": \"operator\"\n}" }
+          }
+        },
+        {
+          "name": "Regenerar API Key",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/auth/api-key"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contatos",
+      "item": [
+        {
+          "name": "Cadastrar contato (opt-in)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/contacts",
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"{{phone_test}}\",\n  \"name\": \"João Silva\",\n  \"email\": \"joao@email.com\",\n  \"opted_in\": \"true\",\n  \"opted_in_source\": \"website_checkout\",\n  \"opted_in_confirmation\": \"Aceito receber mensagens via WhatsApp sobre meus pedidos e promoções.\",\n  \"tags\": [\"clientes\", \"sp\"],\n  \"custom_data\": { \"plano\": \"premium\" }\n}" }
+          }
+        },
+        {
+          "name": "Listar contatos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/contacts?opted_in=true&page=1&limit=20", "query": [
+              { "key": "opted_in", "value": "true" },
+              { "key": "page", "value": "1" },
+              { "key": "limit", "value": "20" }
+            ]}
+          }
+        },
+        {
+          "name": "Buscar contato por telefone",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/contacts/{{phone_test}}"
+          }
+        },
+        {
+          "name": "Opt-out manual",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/contacts/{{phone_test}}/opt-out",
+            "body": { "mode": "raw", "raw": "{ \"reason\": \"solicitacao_cliente\" }" }
+          }
+        },
+        {
+          "name": "Importar contatos em lote",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/contacts/import",
+            "body": { "mode": "raw", "raw": "{\n  \"source\": \"crm_export_jan2025\",\n  \"contacts\": [\n    { \"phone\": \"+5511999990001\", \"name\": \"Maria\", \"opted_in\": true },\n    { \"phone\": \"+5511999990002\", \"name\": \"Carlos\", \"opted_in\": true }\n  ]\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mensagens",
+      "item": [
+        {
+          "name": "Enviar mensagem individual (fila)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/messages/send",
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"{{phone_test}}\",\n  \"template_name\": \"confirmacao_pedido\",\n  \"language\": \"pt_BR\",\n  \"variables\": {\n    \"body\": [\"João\", \"Pedido #1234\", \"R$ 150,00\"]\n  },\n  \"send_immediately\": false\n}" }
+          }
+        },
+        {
+          "name": "Enviar mensagem imediata (síncrono)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/messages/send",
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"{{phone_test}}\",\n  \"template_name\": \"otp_verificacao\",\n  \"language\": \"pt_BR\",\n  \"variables\": { \"body\": [\"123456\"] },\n  \"send_immediately\": true\n}" }
+          }
+        },
+        {
+          "name": "Status da mensagem",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/messages/MESSAGE_ID_AQUI"
+          }
+        },
+        {
+          "name": "Re-tentar mensagem falha",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/messages/MESSAGE_ID_AQUI/retry"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Templates",
+      "item": [
+        {
+          "name": "Sincronizar com Meta",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/templates/sync"
+          }
+        },
+        {
+          "name": "Listar templates aprovados",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/templates?status=APPROVED"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Campanhas",
+      "item": [
+        {
+          "name": "Criar campanha",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/campaigns",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Promo Verão 2025\",\n  \"description\": \"Campanha de desconto para clientes SP\",\n  \"template_id\": \"UUID_DO_TEMPLATE\",\n  \"target_tags\": [\"sp\", \"clientes\"]\n}" }
+          }
+        },
+        {
+          "name": "Disparar campanha",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/campaigns/CAMPAIGN_ID/launch",
+            "body": { "mode": "raw", "raw": "{\n  \"variables_map\": {\n    \"body\": [\"@name\", \"30% de desconto\", \"31/01/2025\"]\n  }\n}" }
+          }
+        },
+        {
+          "name": "Relatório detalhado da campanha",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/campaigns/CAMPAIGN_ID/report"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics & Monitor",
+      "item": [
+        {
+          "name": "Dashboard (últimos 30 dias)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/analytics/dashboard?days=30"
+          }
+        },
+        {
+          "name": "Relatório de opt-outs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/analytics/opt-outs?days=7"
+          }
+        },
+        {
+          "name": "Status da fila",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/monitor/queue"
+          }
+        },
+        {
+          "name": "Logs de mensagens (failed)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/monitor/logs?status=failed&limit=20"
+          }
+        },
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/health"
+          }
+        }
+      ]
+    }
+  ]
+}
